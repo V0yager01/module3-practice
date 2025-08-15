@@ -15,4 +15,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
+    #Отдельный маппинг для /v1/videos/{id}/likes/
+    path('videos/<int:pk>/likes/', VideoViewSet.as_view({'post': 'likes', 'delete': 'likes'}))
 ]
