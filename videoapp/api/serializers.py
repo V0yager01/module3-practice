@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from video.models import Video, User, VideoFile
+from .models import Video, VideoFile
 
 
 class VideoFileSerializer(serializers.ModelSerializer):
@@ -13,6 +13,7 @@ class VideoFileSerializer(serializers.ModelSerializer):
 class VideoSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(source='owner.username', read_only=True)
     video_files = VideoFileSerializer(many=True)
+
     class Meta:
         model = Video
         fields = (
@@ -33,7 +34,7 @@ class VideoIdsSerializer(serializers.ModelSerializer):
 
 class VideoStatisticsSerializer(serializers.Serializer):
     username = serializers.CharField()
-    like_sum = serializers.IntegerField()    
+    like_sum = serializers.IntegerField()
 
     class Meta:
         fields = ['username',

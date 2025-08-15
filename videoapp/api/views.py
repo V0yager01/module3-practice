@@ -9,16 +9,19 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
-from .serializers import VideoSerializer, VideoIdsSerializer, VideoStatisticsSerializer
-from video.models import Video, User
-from like.models import Like
+from .serializers import (VideoSerializer,
+                          VideoIdsSerializer,
+                          VideoStatisticsSerializer)
+from .models import Video, User, Like
 
 
 class VideoViewSet(ModelViewSet):
+    """VieSet для videos/"""
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
 
     def get_queryset(self):
+        """ Выдача querysets в зависимости от привилегий пользователя """
         if self.request.user.is_staff or self.request.user.is_superuser:
             return Video.objects.all()
 
@@ -30,14 +33,17 @@ class VideoViewSet(ModelViewSet):
         return Video.objects.filter(is_published=True)
 
     def get_serializer_class(self, *args, **kwargs):
+        """Получение сериазайзеров"""
         if self.action == 'ids':
             return VideoIdsSerializer
-        elif self.action in ['statistics_subquery', 'statistics_group_by']  :
+        elif self.action in ['statistics_subquery', 'statistics_group_by']:
             return VideoStatisticsSerializer
         return VideoSerializer
 
-    @action(detail=True, methods=['POST', 'DELETE'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['POST', 'DELETE'],
+            permission_classes=[IsAuthenticated])
     def likes(self, request, pk):
+        """Action для /videos/id/likes """
         video = self.get_object()
         if request.method == 'POST':
             with transaction.atomic():
@@ -48,26 +54,24 @@ class VideoViewSet(ModelViewSet):
                 except IntegrityError:
                     return Response({"detail": "Лайк уже существует"},
                                     status=status.HTTP_400_BAD_REQUEST)
-
-
         elif request.method == 'DELETE':
             with transaction.atomic():
                 like = get_object_or_404(Like, video=video)
                 like.delete()
                 video.total_likes = F('total_likes') - 1
-                video.save() 
+                video.save()
         return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'], permission_classes=[IsAdminUser])
     def ids(self, request):
+        """Action для /videos/ids """
         serializer = self.get_serializer_class()
         video = serializer(self.get_queryset(), many=True)
         return Response(video.data)
 
-
     @action(methods=['GET'], detail=False, permission_classes=[IsAdminUser])
     def statistics_subquery(self, request):
-
+        """Action для /videos/statistics_subquery """
         like_sum = (
             Video.objects
             .filter(owner=OuterRef("id"),
@@ -80,10 +84,10 @@ class VideoViewSet(ModelViewSet):
         serializer = self.get_serializer_class()
         statistic = serializer(users, many=True)
         return Response(statistic.data)
-    
 
     @action(["GET"], detail=False, permission_classes=[IsAdminUser])
     def statistics_group_by(self, request, *args, **kwargs):
+        """Action для /videos/statistics_group_by"""
         videos = Video.objects.filter(is_published=True).values(username=F('owner__username')).annotate(like_sum=Sum('total_likes')).values('username','like_sum').order_by('-like_sum')
         serializer = self.get_serializer(videos, many=True)
         return Response(serializer.data)
