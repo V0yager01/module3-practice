@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.db.models import Q, F, OuterRef, Sum, Subquery
+from django.db.models import Q, F, OuterRef, Sum
 from django.shortcuts import get_object_or_404
 from django.db.utils import IntegrityError
 
@@ -9,7 +9,6 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
-from .permissions import IsAuthor
 from .serializers import VideoSerializer, VideoIdsSerializer, VideoStatisticsSerializer
 from video.models import Video, User
 from like.models import Like
