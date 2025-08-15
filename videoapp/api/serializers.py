@@ -38,9 +38,3 @@ class VideoStatisticsSerializer(serializers.Serializer):
     class Meta:
         fields = ['username',
                   'like_sum']
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('username',)
